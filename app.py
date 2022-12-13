@@ -11,8 +11,9 @@ cyto.load_extra_layouts()
 
 # Styling for nodes/edges is done here
 stylesheet=[
+    # Main Node class that all non-compound graph nodes will inherit
     {
-        'selector': '.containers',
+        'selector': '.graph-node',
         'style': {
             'shape': 'circle',
             'content': 'data(label)',
@@ -23,10 +24,23 @@ stylesheet=[
             'font-size': 8,
             'width': 10,
             'height': 10,
-            'background-color': '#F4ABAB',
             'color': '#735050',
             'text-margin-x': 2
         }
+    },
+    # Docker container node style
+    {
+        'selector': '.docker-container',
+        'style': {
+            'background-color': '#F4ABAB'
+        }
+    },
+    # Foreign IP node style
+    {
+    'selector': '.foreign-ip',
+    'style': {
+        'background-color': '#735050'
+    }
     },
     {
         'selector': 'edge',
@@ -94,7 +108,7 @@ for container in containers:
             'label': name,
             'parent': parent_name if parent_name else None
         },
-        'classes': 'containers'
+        'classes': 'graph-node docker-container'
     }
     if(parent_name not in parent_names):
         parent_names.append(parent_name)
@@ -121,7 +135,7 @@ for container in containers:
                         'id': foreign_ip,
                         'label': foreign_ip
                     },
-                    'classes': 'containers'
+                    'classes': 'graph-node foreign-ip'
                 }
                 child_nodes.append(child_node)
             if (int(connection.get('local_port')) in listen_ports):
@@ -211,11 +225,13 @@ def displayTapNodeData(data):
             }
             return json.dumps(stack_blob, indent=2)
         else:
-            container = next(dict for dict in containers if dict.get('name') == data.get('id'))
-            return json.dumps(container, indent=2)
+            container = next((dict for dict in containers if dict.get('name') == data.get('id')), None)
+            if(container):
+                return json.dumps(container, indent=2)
+            else:
+                return json.dumps(data, indent=2)
     else:
         return "Click on a node to see additional details"
-
 
 if __name__ == '__main__':
     app.run_server(debug=True)
