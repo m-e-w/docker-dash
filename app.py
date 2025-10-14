@@ -241,6 +241,8 @@ def displayTapNodeData(data):
         return "Click on a node to see additional details"
 
 if __name__ == '__main__':
+    # Default
     app.run(host="0.0.0.0", port=8050, debug=False)
-
-#print(parent_nodes)
+    
+    # Local Development
+    # app.run(host="127.0.0.1", port=8050, debug=False)
