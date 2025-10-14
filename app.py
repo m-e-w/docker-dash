@@ -81,6 +81,13 @@ stylesheet=[
     }
 ]
 
+def coalesce(*args):
+    """Return the first argument that is not None."""
+    for arg in args:
+        if arg is not None:
+            return arg
+    return None
+
 app = Dash(__name__)
 
 parent_nodes = []
