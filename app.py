@@ -1,7 +1,7 @@
 from dash import Dash, Input, Output
 import dash_cytoscape as cyto
 from layout import create_layout
-from data_processing import load_container_data, process_container_data
+from data_processing import process_container_data
 from utils import coalesce
 import json
 import sys
@@ -11,25 +11,33 @@ cyto.load_extra_layouts()
 
 app = Dash(__name__)
 
-# Process container data for visualization
-child_nodes, parent_nodes, edges, containers, parent_names = process_container_data()
+def serve_layout():
+    # Process container data for visualization
+    child_nodes, parent_nodes, edges, containers, parent_names = process_container_data()
 
-# Set up the app layout with the generated elements
-app.layout = create_layout(elements=child_nodes + parent_nodes + edges)
+    # Store these in the app’s server context
+    app.containers = containers
+    app.parent_names = parent_names
+
+    # Set up the app layout with the generated elements
+    return create_layout(elements=child_nodes + parent_nodes + edges)
+
+# Dynamically serve the layout to ensure fresh data on each load
+app.layout = serve_layout
 
 @ app.callback(Output('cytoscape-tapNodeData-json', 'children'), Input('cytoscape', 'tapNodeData'))
 def displayTapNodeData(data):
     if(data):
         id = data.get('id')
-        if(id in parent_names):
-            child_names = [c.get('name') for c in containers if c.get('stack') == id]
+        if(id in app.parent_names):
+            child_names = [c.get('name') for c in app.containers if c.get('stack') == id]
             return json.dumps({
                 'Container Stack': id,
                 'Container Count': len(child_names),
                 'Container Names': child_names
             }, indent=2)
         else:
-            container = next((c for c in containers if c.get('name') == data.get('id')), None)
+            container = next((c for c in app.containers if c.get('name') == data.get('id')), None)
             return json.dumps(coalesce(container, data), indent=2)
     else:
         return "Click on a node to see additional details"
