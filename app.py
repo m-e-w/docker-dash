@@ -132,7 +132,7 @@ for container in containers:
     for connection in connections:
         foreign_device = connection.get('foreign_device')
 
-        if(foreign_device is None):
+        if(foreign_device is None or foreign_device.endswith(" (Gateway)")):
             foreign_ip = connection.get('foreign_ip')
             if(foreign_ip not in child_names):
                 child_names.append(foreign_ip)
@@ -140,7 +140,7 @@ for container in containers:
                     'group': 'nodes',
                     'data': {
                         'id': foreign_ip,
-                        'label': foreign_ip
+                        'label': coalesce(foreign_device, foreign_ip)
                     },
                     'classes': 'graph-node foreign-ip'
                 }

@@ -6,7 +6,18 @@ NETSTAT_STATES = ["CLOSE_WAIT", "CLOSED", "ESTABLISHED", "FIN_WAIT_1", "FIN_WAIT
 
 client = docker.from_env()
 containers = client.containers.list()
+networks = client.networks.list()
 client.close()
+
+
+network_name_set = {}
+for network in networks:
+    network_config = network.attrs.get('IPAM').get('Config')
+    if network_config:
+        gateway = network_config[0].get('Gateway')
+        if gateway:
+            name = network.name
+            network_name_set[gateway] = name + " (Gateway)"
 
 ip_device_set = {}
 devices = []
@@ -98,7 +109,10 @@ for device in devices:
         foreign_ip = connection.get('foreign_ip')
         foreign_device = None
         if(foreign_ip != '::' and foreign_ip != '0.0.0.0' and foreign_ip != '127.0.0.1'):
-            foreign_device = ip_device_set.get(foreign_ip)
+            if foreign_ip in network_name_set:
+                foreign_device = network_name_set.get(foreign_ip)
+            else:
+                foreign_device = ip_device_set.get(foreign_ip)
         connection.update({"foreign_device": foreign_device})
 
 # Dump the data out
