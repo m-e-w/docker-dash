@@ -110,7 +110,7 @@ for container in containers:
         },
         'classes': 'graph-node docker-container'
     }
-    if(parent_name not in parent_names):
+    if(parent_name and parent_name not in parent_names):
         parent_names.append(parent_name)
         parent_nodes.append(parent_node)
     
