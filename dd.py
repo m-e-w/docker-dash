@@ -1,14 +1,17 @@
 import docker
 import json
 import subprocess
+from datetime import datetime, timezone
 
 NETSTAT_STATES = ["CLOSE_WAIT", "CLOSED", "ESTABLISHED", "FIN_WAIT_1", "FIN_WAIT_2", "LAST_ACK", "LISTEN", "SYN_RECEIVED", "SYN_SEND", "TIME_WAIT"]
 
 client = docker.from_env()
+info = client.info()
 containers = client.containers.list()
 networks = client.networks.list()
 client.close()
 
+host = {"name": info['Name'], "os": info['OperatingSystem'], "cpu": info['NCPU'], "ram": round(info['MemTotal'] / 1024 / 1024 / 1024, 2)}
 
 network_name_set = {}
 for network in networks:
@@ -116,4 +119,7 @@ for device in devices:
         connection.update({"foreign_device": foreign_device})
 
 # Dump the data out
-print(json.dumps(devices, indent=2))
+
+host['devices'] = devices
+snapshot_time = datetime.now(timezone.utc).isoformat()
+print(json.dumps({"snapshot_time": snapshot_time, "host": host}, indent=2))
