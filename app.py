@@ -18,7 +18,12 @@ class DashApp:
     def serve_layout(self):
         # Process container data for visualization
         child_nodes, parent_nodes, edges, containers, parent_names = self.data_processor.process_container_data()
+        
+        #print("PARENT NODES")
+        #print(json.dumps(parent_nodes, indent=2))
 
+        #print("CHILD NODES")
+        #print(json.dumps(child_nodes, indent=2))
         
         self.containers = containers
         self.parent_names = parent_names
