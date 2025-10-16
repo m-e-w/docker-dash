@@ -1,7 +1,12 @@
 import docker
 import json
+import sys
 import subprocess
 from datetime import datetime, timezone
+
+mongo = False
+if len(sys.argv) > 1 and sys.argv[1] == "mongo":
+    mongo = True
 
 NETSTAT_STATES = ["CLOSE_WAIT", "CLOSED", "ESTABLISHED", "FIN_WAIT_1", "FIN_WAIT_2", "LAST_ACK", "LISTEN", "SYN_RECEIVED", "SYN_SEND", "TIME_WAIT"]
 
@@ -122,4 +127,16 @@ for device in devices:
 
 host['devices'] = devices
 snapshot_time = datetime.now(timezone.utc).isoformat()
-print(json.dumps({"snapshot_time": snapshot_time, "host": host}, indent=2))
+payload = {"snapshot_time": snapshot_time, "host": host}
+
+if mongo:
+    from pymongo import MongoClient
+    conn_str = "mongodb://localhost:27017/" 
+    client = MongoClient(conn_str)
+    db = client["dashdb"]
+    collection = db["snapshots"]
+    result = collection.insert_one(payload)
+    print("Inserted document ID:", result.inserted_id)
+
+else:
+    print(json.dumps(payload, indent=2))
