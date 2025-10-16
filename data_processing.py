@@ -29,7 +29,8 @@ class DataProcessor:
         for doc in docs:
             devices = doc['host']['devices']
             for dev in devices:
-                id = dev['id']
+                # id = dev['id'] # Use container ID as our identifier (old)
+                id = dev['name'] # Use container Name (new) 
                 if id not in containers:
                     containers[id] = dev
                 else:
