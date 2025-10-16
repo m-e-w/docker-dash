@@ -7,17 +7,17 @@ volumes:
   mongo_data:
 
 services:  
-  docker-dash:
+  docker_dash_app:
     image: m-e-w.dev/docker-dash:latest
     build: .
-    container_name: docker-dash
+    container_name: docker_dash_app
     depends_on:
-      - mongo
+      - docker_dash_mongo
     networks:
       - monitoring
-  mongo:
+  docker_dash_mongo:
     image: mongo
-    container_name: mongo
+    container_name: docker_dash_mongo
     ports:
       - "127.0.0.1:27017:27017"
     volumes:
