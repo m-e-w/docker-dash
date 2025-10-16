@@ -1,0 +1,26 @@
+networks:
+  monitoring:
+    name: monitoring
+    external: true
+
+volumes:
+  mongo_data:
+
+services:  
+  docker-dash:
+    image: m-e-w.dev/docker-dash:latest
+    build: .
+    container_name: docker-dash
+    depends_on:
+      - mongo
+    networks:
+      - monitoring
+  mongo:
+    image: mongo
+    container_name: mongo
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - monitoring
