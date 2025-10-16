@@ -1,5 +1,6 @@
 # data_processing.py
 import json
+import logging
 from pymongo import MongoClient
 #from bson import json_util
 from utils import make_node, make_edge, coalesce
@@ -30,9 +31,10 @@ class DataProcessor:
             docs = list(self.collection.find().sort("snapshot_time", -1).limit(limit))
         else:
             docs = list(self.collection.find().sort("snapshot_time", -1))
-        print("Documents Found: " + str(len(docs)))
+        
+        logging.info("Mongo Documents Found: " + str(len(docs)))
         for doc in docs:
-            print(f"Document ID: {doc['_id']}, Snapshot Time: {doc['snapshot_time']}")
+            logging.info(f"Mongo Document ID: {doc['_id']}, Snapshot Time: {doc['snapshot_time']}")
             devices = doc['host']['devices']
             for dev in devices:
                 # id = dev['id'] # Use container ID as our identifier (old)

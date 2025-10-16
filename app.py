@@ -4,7 +4,13 @@ from layout import create_layout
 from data_processing import DataProcessor
 from utils import coalesce
 import json
+import logging
 import sys
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
 
 class DashApp:
