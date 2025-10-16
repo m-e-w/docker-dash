@@ -52,6 +52,7 @@ for container in containers:
         ip_addresses.append(ip_address)
     
     nsenter_netstat_cmd = ["sudo", "nsenter", "-t", str(pid), "-n", "netstat", "-anp"]
+    # print(" ".join(nsenter_netstat_cmd)) # Print line for writing the raw command out
     nsenter_netstat_cmd_output = subprocess.check_output(nsenter_netstat_cmd)
     netstat_split_lines = str(nsenter_netstat_cmd_output).split('\\n')
     for line in netstat_split_lines:
