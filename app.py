@@ -1,4 +1,4 @@
-from dash import Dash, Input, Output
+from dash import Dash, Input, Output, State
 import dash_cytoscape as cyto
 from layout import create_layout
 from data_processing import DataProcessor
@@ -6,9 +6,11 @@ from utils import coalesce
 import json
 import sys
 
+
 class DashApp:
     def __init__(self, dev_mode=False):
         cyto.load_extra_layouts() # This is needed to use advanced layouts like cola, spread, etc
+        self.limit = 100
         self.dev_mode = dev_mode
         self.app = Dash(__name__)
         self.data_processor = DataProcessor(dev_mode=dev_mode) 
@@ -17,7 +19,7 @@ class DashApp:
 
     def serve_layout(self):
         # Process container data for visualization
-        child_nodes, parent_nodes, edges, containers, parent_names = self.data_processor.process_container_data()
+        child_nodes, parent_nodes, edges, containers, parent_names = self.data_processor.process_container_data(self.limit)
         
         #print("PARENT NODES")
         #print(json.dumps(parent_nodes, indent=2))
@@ -48,6 +50,17 @@ class DashApp:
                     return json.dumps(coalesce(container, data), indent=2)
             else:
                 return "Click on a node to see additional details"
+    
+        @self.app.callback(Output('cytoscape', 'elements'), Input('apply-button', 'n_clicks'), State('num-snapshots-input', 'value'), prevent_initial_call=True)
+        def update_snapshot_data(n_clicks, limit):
+            if not limit or limit < 1:
+                limit = DEFAULT_SNAPSHOT_LIMIT
+                
+            child_nodes, parent_nodes, edges, containers, parent_names = self.data_processor.process_container_data(limit=limit)
+            self.containers = containers
+            self.parent_names = parent_names
+            
+            return child_nodes + parent_nodes + edges
 
     def run(self):
         if self.dev_mode:

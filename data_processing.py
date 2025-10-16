@@ -18,15 +18,21 @@ class DataProcessor:
             containers = json.load(f)
         return containers
 
-    def load_container_data_mongo(self):
+    def load_container_data_mongo(self, limit=None):
         """Load and return the container data from MongoDB."""
         containers = {}
 
         # Get documents from MongoDB sort by most recent
         # Each document is a "snapshot" of the discovery script output at the time the script was ran, so we want most recent data first
-        docs = list(self.collection.find().sort("snapshot_time", -1))
+        
+        docs = []
+        if limit: 
+            docs = list(self.collection.find().sort("snapshot_time", -1).limit(limit))
+        else:
+            docs = list(self.collection.find().sort("snapshot_time", -1))
         print("Documents Found: " + str(len(docs)))
         for doc in docs:
+            print(f"Document ID: {doc['_id']}, Snapshot Time: {doc['snapshot_time']}")
             devices = doc['host']['devices']
             for dev in devices:
                 # id = dev['id'] # Use container ID as our identifier (old)
@@ -45,9 +51,9 @@ class DataProcessor:
         #print(json.dumps(containers.values(), indent=2, default=json_util.default))
         return list(containers.values())
 
-    def process_container_data(self):
+    def process_container_data(self, limit=None):
         # containers = self.load_container_data_json()
-        containers = self.load_container_data_mongo()
+        containers = self.load_container_data_mongo(limit=limit)
         
         parent_nodes = []
         parent_names = []
