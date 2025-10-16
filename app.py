@@ -65,7 +65,7 @@ class DashApp:
     def run(self):
         if self.dev_mode:
             print("Running in development mode")
-            self.app.run(host="127.0.0.1", port=8050, debug=False)
+            self.app.run(host="127.0.0.1", port=8050, debug=True)
         else:
             print("Running in normal mode")
             self.app.run(host="0.0.0.0", port=8050, debug=False)
