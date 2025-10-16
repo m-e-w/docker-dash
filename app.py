@@ -1,52 +1,71 @@
 from dash import Dash, Input, Output
 import dash_cytoscape as cyto
 from layout import create_layout
-from data_processing import process_container_data
+from data_processing import DataProcessor
 from utils import coalesce
 import json
 import sys
 
-# This is needed to use advanced layouts like cola, spread, etc
-cyto.load_extra_layouts()
+class DashApp:
+    def __init__(self, dev_mode=False):
+        cyto.load_extra_layouts() # This is needed to use advanced layouts like cola, spread, etc
+        self.dev_mode = dev_mode
+        self.app = Dash(__name__)
+        self.data_processor = DataProcessor(dev_mode=dev_mode) 
+        self.app.layout = self.serve_layout # Dynamically serve the layout to ensure fresh data on each load
+        self.register_callbacks()
 
-app = Dash(__name__)
+    def serve_layout(self):
+        # Process container data for visualization
+        child_nodes, parent_nodes, edges, containers, parent_names = self.data_processor.process_container_data()
+        
+        #print("PARENT NODES")
+        #print(json.dumps(parent_nodes, indent=2))
 
-def serve_layout():
-    # Process container data for visualization
-    child_nodes, parent_nodes, edges, containers, parent_names = process_container_data()
+        #print("CHILD NODES")
+        #print(json.dumps(child_nodes, indent=2))
+        
+        self.containers = containers
+        self.parent_names = parent_names
 
-    # Store these in the app’s server context
-    app.containers = containers
-    app.parent_names = parent_names
+        # Set up the app layout with the generated elements
+        return create_layout(elements=child_nodes + parent_nodes + edges)
 
-    # Set up the app layout with the generated elements
-    return create_layout(elements=child_nodes + parent_nodes + edges)
+    def register_callbacks(self):
+        @self.app.callback(Output('cytoscape-tapNodeData-json', 'children'), Input('cytoscape', 'tapNodeData'))
+        def displayTapNodeData(data):
+            if(data):
+                id = data.get('id')
+                if(id in self.parent_names):
+                    child_names = [c.get('name') for c in self.containers if c.get('stack') == id]
+                    return json.dumps({
+                        'Container Stack': id,
+                        'Container Count': len(child_names),
+                        'Container Names': child_names
+                    }, indent=2)
+                else:
+                    container = next((c for c in self.containers if c.get('name') == data.get('id')), None)
+                    return json.dumps(coalesce(container, data), indent=2)
+            else:
+                return "Click on a node to see additional details"
 
-# Dynamically serve the layout to ensure fresh data on each load
-app.layout = serve_layout
-
-@ app.callback(Output('cytoscape-tapNodeData-json', 'children'), Input('cytoscape', 'tapNodeData'))
-def displayTapNodeData(data):
-    if(data):
-        id = data.get('id')
-        if(id in app.parent_names):
-            child_names = [c.get('name') for c in app.containers if c.get('stack') == id]
-            return json.dumps({
-                'Container Stack': id,
-                'Container Count': len(child_names),
-                'Container Names': child_names
-            }, indent=2)
+    def run(self):
+        if self.dev_mode:
+            print("Running in development mode")
+            self.app.run(host="127.0.0.1", port=8050, debug=False)
         else:
-            container = next((c for c in app.containers if c.get('name') == data.get('id')), None)
-            return json.dumps(coalesce(container, data), indent=2)
-    else:
-        return "Click on a node to see additional details"
+            print("Running in normal mode")
+            self.app.run(host="0.0.0.0", port=8050, debug=False)
+    
+def main():
+    dev_mode = False
+    
+    if len(sys.argv) > 1 and sys.argv[1] == "dev":
+        dev_mode = True
+
+    dash_app = DashApp(dev_mode=dev_mode)
+    dash_app.run()
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == "dev":
-        print("Running in development mode")
-        app.run(host="127.0.0.1", port=8050, debug=False)
-    else:
-        print("Running in normal mode")
-        app.run(host="0.0.0.0", port=8050, debug=False)
+    main()
     
