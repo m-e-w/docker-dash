@@ -6,7 +6,7 @@ from utils import make_node, make_edge, coalesce
 
 class DataProcessor:
     def __init__(self, dev_mode=False):
-        conn_str = "mongodb://localhost:27017/" if dev_mode else "mongodb://mongo:27017/"
+        conn_str = "mongodb://localhost:27017/" if dev_mode else "mongodb://docker_dash_mongo:27017/"
         self.client = MongoClient(conn_str)
         self.db = self.client["dashdb"]
         self.collection = self.db["snapshots"]
