@@ -1,6 +1,6 @@
 # docker-dash
 
-A tool for visualizing TCP/UDP connections between Docker containers running on the same host. Uses netstat data, container metadata, and optionally MongoDB for persistent snapshots. The dashboard is built with Dash and Cytoscape.
+Visualize network activity between Docker containers on a host. docker-dash collects TCP/UDP connections and container metadata using a combination of system tools and Docker APIs, storing collected data in MongoDB for interactive exploration through a dashboard built with Dash and Cytoscape.
 
 ---
 
@@ -10,7 +10,7 @@ A tool for visualizing TCP/UDP connections between Docker containers running on 
 - **Docker Engine** installed and running
 - **Docker Compose** (for simplified setup)
 - **sudo/root access:** Required for running low-level networking commands inside containers
-- **MongoDB** (optional): Enables persistent snapshot storage and advanced features
+- **MongoDB:**  Required for persistent storage of collected container/connection data
 - **Python dependencies:** See `requirements.txt`
   - dash_cytoscape==1.0.2
   - docker==7.1.0
@@ -33,21 +33,23 @@ A tool for visualizing TCP/UDP connections between Docker containers running on 
      ```
    - Start all services:
      ```bash
-     docker-compose up --build
+     docker-compose up --build -d
      ```
    - This will launch both the dashboard app and a MongoDB instance, interconnected on the `monitoring` network.
 
-3. **Or, run locally via Python (for development):**
-   - Create and activate a Python virtual environment:
+3. **Create the python virtual environment:**  
+The command below will create a folder called `venvs` in the users home directory and will then create a new python virtual environment called `docker-dash` inside of it. 
      ```bash
-     python3 -m venv venv
-     source venv/bin/activate
+     mkdir -p /home/$USER/venvs && python -m venv /home/$USER/venvs/docker-dash
      ```
-   - Install dependencies:
+4. **Activate the python virtual environment**  
+     ```
+     source /home/$USER/venvs/docker-dash/bin/activate
+     ```
+5. **Install the required python package dependencies**
      ```bash
      pip install -r requirements.txt
      ```
-   - (Recommended) Make sure MongoDB is running locally if you want to save snapshots.
 
 ---
 
@@ -68,26 +70,21 @@ A tool for visualizing TCP/UDP connections between Docker containers running on 
   - Requires local MongoDB running on default port.
 
 ### 2. Launch the Dashboard Application
-
-- **With Docker Compose:**  
-  The dashboard will be available at [http://localhost:8050](http://localhost:8050) after running `docker-compose up`.
-
-- **Manual Python launch:**  
-  ```bash
-  python app.py
-  ```
-  - For development mode (disables host binding), run:
-    ```bash
-    python app.py dev
-    ```
-  - Default local address is [http://localhost:8050](http://localhost:8050).
+  The dashboard will be available at [http://localhost:8050](http://localhost:8050) after running `docker-compose up -d` 
 
 ### 3. Usage Notes
 
-- The dashboard visualizes real-time and historical connections between containers.
-- Clicking nodes in the graph reveals metadata, stack membership, and live connection info.
-- If MongoDB is enabled, historical snapshots can be analyzed.
+- **Snapshots**
+  - Note: Only the last 100 snapshots are loaded by default. But you can override this and enter any # you want. Snapshots are loaded by most recent first. 
 
+### 4. Local Development
+  For local development purposes, you can also start the dash app in dev mode:  
+  ```bash
+  python app.py dev
+  ```
+  By default, it will listen on [http://localhost:8050](http://localhost:8050) 
+    - You can edit app.py to listen on `0.0.0.0:8050` if needed for external access.
+  
 ---
 
 For troubleshooting, advanced configuration, or contributing, please see code comments or open an issue.
