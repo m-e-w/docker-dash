@@ -1,4 +1,5 @@
 # data_processing.py
+
 import json
 import logging
 from pymongo import MongoClient
@@ -22,6 +23,7 @@ class DataProcessor:
     def load_container_data_mongo(self, limit=None):
         """Load and return the container data from MongoDB."""
         containers = {}
+        processes = {}
 
         # Get documents from MongoDB sort by most recent
         # Each document is a "snapshot" of the discovery script output at the time the script was ran, so we want most recent data first
@@ -34,6 +36,14 @@ class DataProcessor:
         
         logging.info("Mongo Documents Found: " + str(len(docs)))
         for doc in docs:
+            procs = doc['host'].get("processes", {})
+            for k, v in procs.items():
+                if k not in processes:
+                    processes[k] = v
+                else:
+                    processes[k]["connections"].extend(v.get("connections", []))
+
+
             logging.info(f"Mongo Document ID: {doc['_id']}, Snapshot Time: {doc['snapshot_time']}")
             devices = doc['host']['devices']
             for dev in devices:
@@ -51,18 +61,56 @@ class DataProcessor:
             c["listen_ports"] = list(set(c["listen_ports"]))
 
         #print(json.dumps(containers.values(), indent=2, default=json_util.default))
-        return list(containers.values())
+        return list(containers.values()), processes
 
     def process_container_data(self, limit=None):
         # containers = self.load_container_data_json()
-        containers = self.load_container_data_mongo(limit=limit)
-        
+        containers, processes = self.load_container_data_mongo(limit=limit)
+
         parent_nodes = []
         parent_names = []
         child_nodes = []
         child_names = []
         edges = []
         edge_ids = []
+  
+        # Process Processes
+        for k, v in processes.items():
+            node_a = make_node(id=f"p__{k}", label=k, classes='graph-node process')
+            
+            for c in v.get("connections", []):
+                foreign_device = c.get("foreign_device", None)
+                foreign_ip = c.get("foreign_ip")
+                local_ip = c.get("local_ip")
+                
+                key = None
+                if foreign_device and int(local_ip[-1]) == 1:
+                    key = local_ip
+                elif foreign_device and int(foreign_ip[-1]) == 1:
+                    key = foreign_ip 
+               
+                if not key:
+                    continue
+                
+                node_b = make_node(id=f"i__{key}", label=foreign_device, classes='graph-node docker-gateway-ip')
+                
+                if c.get("local_port") in v.get("listen_ports", []):
+                    edge = make_edge(id=key+k, source=f"{node_b['data']['id']}", target=f"{node_a['data']['id']}")
+                    
+                    if edge['data']['id'] not in edge_ids:
+                        
+                        # Only bother adding any nodes that have an edge
+                        if key not in child_names:
+                            child_nodes.append(node_a)
+                            child_names.append(key)
+                        if k not in child_names:
+                            child_nodes.append(node_b)
+                            child_names.append(key)
+                        
+                        edges.append(edge)
+                        edge_ids.append(edge['data']['id'])
+        
+        # Process Containers
         for container in containers:
             name = container.get('name')
             parent_name = container.get('stack')
@@ -86,12 +134,14 @@ class DataProcessor:
                 local_port = int(connection.get('local_port'))
                 edge = None
 
-                # Container to ip address node connection processing
-                if(foreign_device is None or foreign_device.endswith(" (Gateway)")):
+                is_gateway = True if foreign_device and foreign_device.endswith(" (Gateway)") else False
+                node_class = "docker-gateway-ip" if is_gateway else "foreign-ip"
+                # Container to ip connection processing
+                if(not foreign_device or is_gateway):
                     foreign_ip = connection.get('foreign_ip')
                     if(foreign_ip not in child_names):
                         child_names.append(foreign_ip)
-                        child_node = make_node(id=f"i__{foreign_ip}", label=coalesce(foreign_device, foreign_ip), classes='graph-node foreign-ip')
+                        child_node = make_node(id=f"i__{foreign_ip}", label=coalesce(foreign_device, foreign_ip), classes=f"graph-node {node_class}")
                         child_nodes.append(child_node)
                     
                     if (local_port in listen_ports):
