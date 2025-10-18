@@ -22,6 +22,7 @@ stylesheet = [
     {"selector": ".process", "style": {"background-color": "#84B067"}},
     # Foreign IP node style
     {"selector": ".foreign-ip", "style": {"background-color": "#735050"}},
+    {"selector": ".docker-gateway-ip", "style": {"background-color": "#9367B0"}},
     {
         "selector": "edge",
         "style": {

@@ -1,4 +1,5 @@
 # data_processing.py
+
 import json
 import logging
 from pymongo import MongoClient
@@ -91,7 +92,7 @@ class DataProcessor:
                 if not key:
                     continue
                 
-                node_b = make_node(id=f"i__{key}", label=foreign_device, classes='graph-node foreign-ip')
+                node_b = make_node(id=f"i__{key}", label=foreign_device, classes='graph-node docker-gateway-ip')
                 
                 if c.get("local_port") in v.get("listen_ports", []):
                     edge = make_edge(id=key+k, source=f"{node_b['data']['id']}", target=f"{node_a['data']['id']}")
@@ -133,12 +134,14 @@ class DataProcessor:
                 local_port = int(connection.get('local_port'))
                 edge = None
 
-                # Container to ip address node connection processing
-                if(foreign_device is None or foreign_device.endswith(" (Gateway)")):
+                is_gateway = True if foreign_device and foreign_device.endswith(" (Gateway)") else False
+                node_class = "docker-gateway-ip" if is_gateway else "foreign-ip"
+                # Container to ip connection processing
+                if(not foreign_device or is_gateway):
                     foreign_ip = connection.get('foreign_ip')
                     if(foreign_ip not in child_names):
                         child_names.append(foreign_ip)
-                        child_node = make_node(id=f"i__{foreign_ip}", label=coalesce(foreign_device, foreign_ip), classes='graph-node foreign-ip')
+                        child_node = make_node(id=f"i__{foreign_ip}", label=coalesce(foreign_device, foreign_ip), classes=f"graph-node {node_class}")
                         child_nodes.append(child_node)
                     
                     if (local_port in listen_ports):
