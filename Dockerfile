@@ -4,8 +4,7 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY app.py data_processing.py layout.py styles.py utils.py ./
-COPY assets/ ./assets/
+COPY dash_app/ .
 
 EXPOSE 8050
 
