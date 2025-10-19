@@ -33,7 +33,7 @@ Visualize network activity between Docker containers on a host. docker-dash coll
      ```
    - Start all services:
      ```bash
-     docker-compose up --build -d
+     docker compose up --build -d
      ```
    - This will launch both the dashboard app and a MongoDB instance, interconnected on the `docker_dash` network.
 
@@ -70,7 +70,7 @@ The command below will create a folder called `venvs` in the users home director
   - Requires local MongoDB running on default port.
 
 ### 2. Launch the Dashboard Application
-  The dashboard will be available at [http://localhost:8050](http://localhost:8050) after running `docker-compose up -d` 
+  The dashboard will be available at [http://localhost:8050](http://localhost:8050) after running `docker compose up -d` 
 
 ### 3. Usage Notes
 
