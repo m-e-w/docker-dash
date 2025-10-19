@@ -22,6 +22,7 @@ class DashApp:
         self.data_processor = DataProcessor(dev_mode=dev_mode) 
         self.layout_serve_count = 0 # Kind of a hacky workaround to avoid loading data from mongo on start. Need to find a better solution
         self.app.layout = self.serve_layout # Dynamically serve the layout to ensure fresh data on each load
+        self.elements = []
         self.register_callbacks()
 
     def serve_layout(self):
@@ -40,6 +41,7 @@ class DashApp:
             
         self.layout_serve_count+=1 # Increment out layout serve counter so that we actually do get data
         # Set up the app layout with the generated elements
+        self.elements = elements
         return create_layout(elements=elements)
 
     def register_callbacks(self):
@@ -70,7 +72,17 @@ class DashApp:
                 child_nodes, parent_nodes, edges, containers, parent_names = self.data_processor.process_container_data(limit=limit)
                 self.containers = containers
                 self.parent_names = parent_names
-                return child_nodes + parent_nodes + edges
+                elements = child_nodes + parent_nodes + edges
+                self.elements = elements
+                return elements
+            
+        @self.app.callback(Output("export-graph", "data"), Input("export-button", "n_clicks"), prevent_initial_call=True)
+        def export_snapshots(n_clicks):
+            if self.elements:
+                export_data = json.dumps(self.elements, indent=2)
+                return dict(content=export_data, filename="snapshots.json")
+            else:
+                return None
 
     def run(self):
         if self.dev_mode:
