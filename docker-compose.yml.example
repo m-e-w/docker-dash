@@ -1,7 +1,6 @@
 networks:
   monitoring:
     name: monitoring
-    external: true
 
 volumes:
   mongo_data:
@@ -9,18 +8,22 @@ volumes:
 services:  
   docker_dash_app:
     image: m-e-w.dev/docker-dash:latest
-    build: .
     container_name: docker_dash_app
-    depends_on:
-      - docker_dash_mongo
     networks:
       - monitoring
+    ports:
+      - "127.0.0.1:8050:8050"
+    depends_on:
+      - docker_dash_mongo
+    build: .
+
   docker_dash_mongo:
     image: mongo
     container_name: docker_dash_mongo
-    ports:
-      - "127.0.0.1:27017:27017"
     volumes:
       - mongo_data:/data/db
     networks:
       - monitoring
+    ports:
+      - "127.0.0.1:27017:27017"
+
