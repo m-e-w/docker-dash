@@ -84,6 +84,7 @@ The command below will create a folder called `venvs` in the users home director
 ### 4. Local Development
   For local development purposes, you can also start the dash app in dev mode:  
   ```bash
+  cd dash_app
   python app.py dev
   ```
   By default, it will listen on [http://localhost:8050](http://localhost:8050) 
