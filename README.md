@@ -1,6 +1,8 @@
 # docker-dash
 
-Visualize network activity between Docker containers on a host. docker-dash collects TCP/UDP connections and container metadata using a combination of system tools and Docker APIs, storing collected data in MongoDB for interactive exploration through a dashboard built with Dash and Cytoscape.
+Visualize network activity between Docker containers on a host. 
+
+docker-dash collects TCP/UDP connections and container metadata using a combination of system tools and Docker APIs, storing collected data in MongoDB for interactive exploration through a dashboard built with Dash and Cytoscape.
 
 ![Demo GIF](media/demo-01.gif)
 
@@ -72,7 +74,7 @@ The command below will create a folder called `venvs` in the users home director
   - Requires local MongoDB running on default port.
 
 ### 2. Launch the Dashboard Application
-  The dashboard will be available at [http://localhost:8050](http://localhost:8050) after running `docker compose up -d` 
+  The dashboard will be available at [http://localhost:8050](http://localhost:8050) and [http://{DOCKER_HOST_IP}:8050](http://{DOCKER_HOST_IP}:8050) after running `docker compose up -d` 
 
 ### 3. Usage Notes
 
