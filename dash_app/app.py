@@ -1,4 +1,4 @@
-from dash import Dash, Input, Output, State
+from dash import Dash, Input, Output, State, no_update
 import dash_cytoscape as cyto
 from layout import create_layout
 from data_processing import DataProcessor
@@ -63,14 +63,14 @@ class DashApp:
     
         @self.app.callback(Output('cytoscape', 'elements'), Input('apply-button', 'n_clicks'), State('num-snapshots-input', 'value'), prevent_initial_call=True)
         def update_snapshot_data(n_clicks, limit):
-            if not limit or limit < 1:
-                limit = DEFAULT_SNAPSHOT_LIMIT
-
-            child_nodes, parent_nodes, edges, containers, parent_names = self.data_processor.process_container_data(limit=limit)
-            self.containers = containers
-            self.parent_names = parent_names
-            
-            return child_nodes + parent_nodes + edges
+            # If user supplied limit is invalid, return special signal to dash to not change output
+            if not limit or not isinstance(limit, int) or limit < 1:
+                return no_update
+            else:
+                child_nodes, parent_nodes, edges, containers, parent_names = self.data_processor.process_container_data(limit=limit)
+                self.containers = containers
+                self.parent_names = parent_names
+                return child_nodes + parent_nodes + edges
 
     def run(self):
         if self.dev_mode:
