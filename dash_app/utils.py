@@ -11,6 +11,8 @@ def coalesce(*args):
 
 def make_node(id, label, classes, parent=None):
     """Create and return a cytoscape node dictionary."""
+    # if "foreign-ip" in classes:
+    #     parent = '__EXTERNAL__'
     node = {}
     data = {"id": id, "label": label}
     if parent:
