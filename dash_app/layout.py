@@ -17,8 +17,10 @@ def create_layout(elements):
                     value=100,  # default
                     style={'width': '80px'}
                 ),
-                html.Button("Apply", id='apply-button', style={'marginLeft': '10px'})
-            ], style={'display': 'flex', 'alignItems': 'center'})
+                html.Button("Load", id='apply-button', style={'marginLeft': '10px', 'marginRight': '8px'}),
+                html.Button("Export", id='export-button', style={'marginRight': '8px'}),
+            ], style={'display': 'flex', 'alignItems': 'center'}),
+            dcc.Download(id="export-graph")
         ],
         style={
             'display': 'flex',
