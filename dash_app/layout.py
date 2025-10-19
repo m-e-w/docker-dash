@@ -29,6 +29,19 @@ def create_layout(elements):
                         "CONTAINER"
                     ], style={'marginRight': '12px'}),
 
+                    # Process
+                    html.Span([
+                        html.Span(style={
+                            'display': 'inline-block',
+                            'width': '12px',
+                            'height': '12px',
+                            'backgroundColor': '#84B067',
+                            'borderRadius': '50%',
+                            'marginRight': '6px'
+                        }),
+                        "PROCESS"
+                    ], style={'marginRight': '12px'}),
+
                     # Docker Network / Gateway IP
                     html.Span([
                         html.Span(style={
@@ -53,7 +66,8 @@ def create_layout(elements):
                             'marginRight': '6px'
                         }),
                         "IP"
-                    ], style={'marginRight': '24px'}),
+                    ], style={'marginRight': '24px'})
+
                 ], 
                 className="legend-section",
                 style={
