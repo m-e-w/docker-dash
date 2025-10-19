@@ -27,15 +27,15 @@ Visualize network activity between Docker containers on a host. docker-dash coll
    ```
 
 2. **(Recommended) Build and start via Docker Compose:**
-   - Ensure the external `monitoring` network exists:
+   - Copy `docker-compose.yml.example` to `docker-compose.yml`
      ```bash
-     docker network create monitoring
+     cp docker-compose.yml.example docker-compose.yml
      ```
    - Start all services:
      ```bash
      docker-compose up --build -d
      ```
-   - This will launch both the dashboard app and a MongoDB instance, interconnected on the `monitoring` network.
+   - This will launch both the dashboard app and a MongoDB instance, interconnected on the `docker_dash` network.
 
 3. **Create the python virtual environment:**  
 The command below will create a folder called `venvs` in the users home directory and will then create a new python virtual environment called `docker-dash` inside of it. 
