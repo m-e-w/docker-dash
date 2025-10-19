@@ -2,6 +2,8 @@
 
 Visualize network activity between Docker containers on a host. docker-dash collects TCP/UDP connections and container metadata using a combination of system tools and Docker APIs, storing collected data in MongoDB for interactive exploration through a dashboard built with Dash and Cytoscape.
 
+![Demo GIF](media/demo-01.gif)
+
 ---
 
 ## Project Requirements
