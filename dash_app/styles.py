@@ -43,6 +43,8 @@ stylesheet = [
             "background-color": "#04A1D2",
             "line-color": "#04A1D2",
             "target-arrow-color": "#04A1D2",
+            "border-color": "#ffa500",
+            "border-width": 2,
         },
     },
     {
