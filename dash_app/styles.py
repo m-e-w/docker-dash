@@ -1,4 +1,6 @@
-# Styling for nodes/edges is done here
+# styles.py
+
+
 stylesheet = [
     # Main Node class that all non-compound graph nodes will inherit
     {
