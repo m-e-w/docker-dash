@@ -162,4 +162,6 @@ class DataProcessor:
                     if edge_id not in edge_ids:
                         edge_ids.append(edge_id)
                         edges.append(edge)
+        # parent_names.append('EXTERNAL')
+        # parent_nodes.append(make_node(id='__EXTERNAL__', label='EXTERNAL', classes='stacks'))
         return child_nodes, parent_nodes, edges, containers, parent_names
