@@ -25,3 +25,17 @@ def make_edge(id, source, target):
     """Create and return a cytoscape edge dictionary."""
     edge = {"group": "edges", "data": {"id": id, "source": source, "target": target}}
     return edge
+
+def anonymize_ip(ip):
+    """Take a IP as input and return a anonymized one"""
+    if '.' in ip:
+        octets = ip.split('.')
+        if len(octets) != 4:
+            return ip
+        else:
+            octets.pop(3) # Remove last octect
+            octets.append('X')
+            return '.'.join(str(octet) for octet in octets)
+    return ip
+
+

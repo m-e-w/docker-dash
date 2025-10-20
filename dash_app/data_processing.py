@@ -4,14 +4,15 @@ import json
 import logging
 from pymongo import MongoClient
 #from bson import json_util
-from utils import make_node, make_edge, coalesce
+from utils import make_node, make_edge, coalesce, anonymize_ip
 
 class DataProcessor:
-    def __init__(self, dev_mode=False):
+    def __init__(self, dev_mode=False, mask_ip_labels=True):
         conn_str = "mongodb://localhost:27017/" if dev_mode else "mongodb://docker_dash_mongo:27017/"
         self.client = MongoClient(conn_str)
         self.db = self.client["dashdb"]
         self.collection = self.db["snapshots"]
+        self.mask_ip_labels = mask_ip_labels
 
     def load_container_data_json(self):
         """Load and return the container data from JSON."""
@@ -141,7 +142,7 @@ class DataProcessor:
                     foreign_ip = connection.get('foreign_ip')
                     if(foreign_ip not in child_names):
                         child_names.append(foreign_ip)
-                        child_node = make_node(id=f"i__{foreign_ip}", label=coalesce(foreign_device, foreign_ip), classes=f"graph-node {node_class}")
+                        child_node = make_node(id=f"i__{foreign_ip}", label=coalesce(foreign_device, anonymize_ip(foreign_ip) if self.mask_ip_labels else foreign_ip), classes=f"graph-node {node_class}")
                         child_nodes.append(child_node)
                     
                     if (local_port in listen_ports):

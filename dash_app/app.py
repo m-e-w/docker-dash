@@ -14,12 +14,12 @@ logging.basicConfig(
 
 
 class DashApp:
-    def __init__(self, dev_mode=False):
+    def __init__(self, dev_mode=False, mask_ip_labels=True):
         cyto.load_extra_layouts()  # This is needed to use advanced layouts like cola, spread, etc
         self.limit = 100
         self.dev_mode = dev_mode
         self.app = Dash(__name__)
-        self.data_processor = DataProcessor(dev_mode=dev_mode)
+        self.data_processor = DataProcessor(dev_mode=dev_mode, mask_ip_labels=mask_ip_labels)
         self.layout_serve_count = 0  # Kind of a hacky workaround to avoid loading data from mongo on start. Need to find a better solution
         self.app.layout = (
             self.serve_layout
@@ -146,11 +146,12 @@ class DashApp:
 
 def main():
     dev_mode = False
+    mask_ip_labels = False
 
     if len(sys.argv) > 1 and sys.argv[1] == "dev":
         dev_mode = True
 
-    dash_app = DashApp(dev_mode=dev_mode)
+    dash_app = DashApp(dev_mode=dev_mode, mask_ip_labels=mask_ip_labels)
     dash_app.run()
 
 
