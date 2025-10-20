@@ -4,7 +4,7 @@ stylesheet = [
     {
         "selector": ".graph-node",
         "style": {
-            "shape": "circle",
+            "shape": "ellipse",
             "content": "data(label)",
             "text-halign": "right",
             "text-valign": "center",
@@ -28,7 +28,7 @@ stylesheet = [
         "style": {
             "target-arrow-color": "#735050",
             "target-arrow-shape": "triangle-backcurve",
-            "target-arrow-fill": "fill",
+            "target-arrow-fill": "filled",
             "line-style": "solid",
             "arrow-scale": 0.5,
             "curve-style": "straight",
@@ -59,7 +59,7 @@ stylesheet = [
             "min-height": 100,
             "shape": "roundrectangle",
             "text-margin-y": -3,
-            "weight": "normal",
+            "font-weight": "normal",
         },
     },
 ]
