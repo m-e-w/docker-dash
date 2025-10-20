@@ -1,5 +1,17 @@
-# layout.py
+"""
+layout.py
 
+This module defines the main layout for the Docker Dash application using Dash and Dash Cytoscape.
+
+It provides a single function `create_layout(elements)` that returns the complete app layout
+as a Dash HTML tree. See file for layout structure.
+
+Notes:
+- `elements` argument must be a list of Cytoscape elements (nodes and edges) to render.
+- This module is responsible only for the **structure/layout**; styling is handled via
+  CSS in `assets/styles.css` and Cytoscape styles in `styles.py`.
+- For dynamic interactions (search, taps, updates), use Dash callbacks in a separate module.
+"""
 
 from dash import html, dcc
 import dash_cytoscape as cyto

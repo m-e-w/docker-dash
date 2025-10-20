@@ -1,3 +1,18 @@
+/*
+assets/styles.css
+
+This file contains the general styling for the Dash app layout, panels, headers,
+and other non-Cytoscape components.
+
+It is loaded automatically by Dash from the assets/ folder.
+
+Notes:
+- This file should NOT contain Dash Cytoscape styles (nodes, edges, selection), 
+  which should remain in styles.py.
+- Classes used here should match the className properties of your Dash components.
+*/
+
+
 * {
     box-sizing: border-box;
 }

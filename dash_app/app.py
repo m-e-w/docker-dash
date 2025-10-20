@@ -1,5 +1,14 @@
-# app.py
+"""
+app.py
 
+Main module for the Docker Dash application.
+
+This module defines the DashApp class, which encapsulates the entire Dash application,
+including layout serving, data processing, and interactive callbacks.
+
+Notes:
+- Cytoscape styling comes from styles.py; general page layout from layout.py and assets/styles.css.
+"""
 
 from dash import Dash, Input, Output, State, no_update
 from styles import stylesheet as base_stylesheet

@@ -1,5 +1,15 @@
-# data_processing.py
+"""
+data_processing.py
 
+This module defines the DataProcessor class, which handles loading, processing,
+and transforming container and process data for visualization in Docker Dash.
+
+Notes:
+- All nodes and edges returned are compatible with Dash Cytoscape.
+- Node IDs are prefixed to distinguish types:
+    - 'c__' for containers, 'p__' for processes, 'i__' for IPs, 's__' for stacks.
+- This module is independent of the Dash layout; it only prepares data for visualization.
+"""
 
 import json
 import logging

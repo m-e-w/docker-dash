@@ -1,4 +1,8 @@
-# utils.py
+"""
+utils.py
+
+This module contains general utility functions used across the Docker Dash application.
+"""
 
 
 def coalesce(*args):

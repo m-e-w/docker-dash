@@ -1,5 +1,15 @@
-# styles.py
+"""
+styles.py
 
+This module defines the Dash Cytoscape stylesheet for the network graph in the app.
+
+It contains a list of dictionaries that map Cytoscape selectors to style properties.
+These styles are applied to graph nodes, edges, and selected elements.
+
+Notes:
+- This file should only contain Cytoscape-specific styles. All general app layout and page CSS
+  should be moved to assets/styles.css for standard CSS styling.
+"""
 
 stylesheet = [
     # Main Node class that all non-compound graph nodes will inherit

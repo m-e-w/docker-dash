@@ -1,5 +1,17 @@
-# dd.py
+"""
+dd.py
 
+Docker Dash discovery script.
+
+This script gathers container and host process data for visualization in Docker Dash.
+It can output data either to stdout as JSON or insert it into a MongoDB collection.
+
+Notes:
+- Connections are filtered to exclude local-only traffic (e.g., 127.0.0.1 or "::").
+- Each device dictionary contains all metadata and a list of its connections.
+- Designed to be run as a standalone script to generate snapshots for Docker Dash.
+- Command-line argument "mongo" switches output from stdout to MongoDB insertion.
+"""
 
 import docker
 import json
