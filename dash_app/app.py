@@ -114,49 +114,26 @@ class DashApp:
             else:
                 return None
 
-        @self.app.callback(
+        # Client side callback for search/highlight so we don't send a POST request on every keystroke
+        self.app.clientside_callback(
+            """
+        function(searchValue, baseStyles) {
+            const styles = JSON.parse(JSON.stringify(baseStyles));  // clone so we don’t mutate it
+            if (!searchValue) return styles;
+
+            styles.push({
+                selector: `node[label *= "${searchValue}"]`,
+                style: {
+                'background-color': '#04A1D2'
+                }
+            });
+            return styles;
+        }
+        """,
             Output("cytoscape", "stylesheet"),
             Input("node-search", "value"),
-            prevent_initial_call=True,
+            Input("base-styles", "data"),
         )
-        def highlight_node(search_value):
-            highlight_color = "#04A1D2"
-            border_color = "#ffa500"
-            if not search_value:
-                # Clear selection if search is empty
-                return base_stylesheet
-            new_stylesheet = base_stylesheet.copy()
-            logging.info(f"search_value: {search_value}")
-            # Find all nodes that match the search
-            matched_node_ids = []
-            for element in self.elements:
-                if element["group"] == "nodes":
-                    if search_value.lower() in element["data"]["label"].lower():
-                        matched_node_ids.append(element["data"]["id"])
-
-            for id in matched_node_ids:
-                new_stylesheet.append(
-                    {
-                        "selector": f'node[id = "{id}"]',
-                        "style": {
-                            "background-color": highlight_color,
-                            # "border-color": "#FF851B",
-                            # "border-width": 1,
-                        },
-                    }
-                )
-                new_stylesheet.append(
-                    {
-                        "selector": f'node[id = "{id}"]:selected',
-                        "style": {
-                            "background-color": highlight_color,
-                            "border-color": border_color,
-                            "border-width": 2,
-                        },
-                    }
-                )
-
-            return new_stylesheet
 
     def run(self):
         if self.dev_mode:

@@ -118,6 +118,7 @@ def create_layout(elements):
                                 debounce=False,
                                 style={"width": "160px", "marginRight": "8px"},
                             ),
+                            dcc.Store(id="base-styles", data=stylesheet),
                         ],
                         style={
                             "display": "flex",
