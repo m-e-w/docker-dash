@@ -18,7 +18,7 @@ from utils import make_node, make_edge, coalesce, anonymize_ip
 
 
 class DataProcessor:
-    def __init__(self, dev_mode=False, mask_ip_labels=True):
+    def __init__(self, dev_mode=False, mask_ip_labels=True ,hide_procs_with_no_inbound=True):
         conn_str = (
             "mongodb://localhost:27017/" if dev_mode else "mongodb://docker_dash_mongo:27017/"
         )
@@ -26,6 +26,7 @@ class DataProcessor:
         self.db = self.client["dashdb"]
         self.collection = self.db["snapshots"]
         self.mask_ip_labels = mask_ip_labels
+        self.hide_procs_with_no_inbound = hide_procs_with_no_inbound
 
     def is_gateway(self, name):
         """Check to see if a foreign_device name is a gateway"""
@@ -99,7 +100,16 @@ class DataProcessor:
             # Node A will always be a process
             node_a = make_node(id=f"p__{k}", label=k, classes="graph-node process")
 
-            for c in v.get("connections", []):
+            connections = v.get("connections", [])
+            listen_ports = v.get("listen_ports", [])
+
+            # Only add this process if it has at least one inbound connection
+            if self.hide_procs_with_no_inbound:
+                has_inbound = any(c.get("local_port") in listen_ports for c in connections)
+                if not has_inbound:
+                    continue  # skip this process entirely
+
+            for c in connections:
                 foreign_device = c.get("foreign_device", None)
                 foreign_ip = c.get("foreign_ip")
                 local_ip = c.get("local_ip")
@@ -133,7 +143,7 @@ class DataProcessor:
                 # For now just take foreign ip but we could ingest local ip as well possibly
                 else:
                     id = f"i__{foreign_ip}"
-                    classes_string += "foreign-ip"
+                    classes_string += "foreign-ip" if foreign_ip != "127.0.0.1" else "docker-gateway-ip"
                     label = foreign_ip
                     key = foreign_ip
 
@@ -144,7 +154,7 @@ class DataProcessor:
                 )
 
                 # Determine edge direction
-                if c.get("local_port") in v.get("listen_ports", []):
+                if c.get("local_port") in listen_ports:
                     # inbound
                     source_node = node_b
                     target_node = node_a
