@@ -20,9 +20,7 @@ from utils import make_node, make_edge, coalesce, anonymize_ip
 class DataProcessor:
     def __init__(self, dev_mode=False, mask_ip_labels=True):
         conn_str = (
-            "mongodb://localhost:27017/"
-            if dev_mode
-            else "mongodb://docker_dash_mongo:27017/"
+            "mongodb://localhost:27017/" if dev_mode else "mongodb://docker_dash_mongo:27017/"
         )
         self.client = MongoClient(conn_str)
         self.db = self.client["dashdb"]
@@ -63,9 +61,7 @@ class DataProcessor:
                 else:
                     processes[k]["connections"].extend(v.get("connections", []))
 
-            logging.info(
-                f"Mongo Document ID: {doc['_id']}, Snapshot Time: {doc['snapshot_time']}"
-            )
+            logging.info(f"Mongo Document ID: {doc['_id']}, Snapshot Time: {doc['snapshot_time']}")
             devices = doc["host"]["devices"]
             for dev in devices:
                 # id = dev['id'] # Use container ID as our identifier (old)
@@ -108,7 +104,7 @@ class DataProcessor:
                 foreign_ip = c.get("foreign_ip")
                 local_ip = c.get("local_ip")
 
-            # Node B may reflect a docker container, gateway ip, or foreignip
+                # Node B may reflect a docker container, gateway ip, or foreignip
                 id = ""
                 classes_string = "graph-node "
                 label = ""
@@ -123,21 +119,21 @@ class DataProcessor:
                         key = local_ip
                     elif int(foreign_ip[-1]) == 1:
                         key = foreign_ip
-                    
+
                     # Check if it the device is a gateway or not
                     if self.is_gateway(foreign_device):
-                        classes_string+="docker-gateway-ip"
-                        id=f"i__{key}"
+                        classes_string += "docker-gateway-ip"
+                        id = f"i__{key}"
                     # If its not a gateway then it must be a container since we have any value at all for foreign_device
                     else:
-                        classes_string+="docker-container"
-                        id=f"c__{foreign_device}"
+                        classes_string += "docker-container"
+                        id = f"c__{foreign_device}"
                         key = foreign_device
                 # If we are here it means process is talking to a foreign ip and not a docker gateway ip or container
                 # For now just take foreign ip but we could ingest local ip as well possibly
                 else:
-                    id=f"i__{foreign_ip}"
-                    classes_string+="foreign-ip"
+                    id = f"i__{foreign_ip}"
+                    classes_string += "foreign-ip"
                     label = foreign_ip
                     key = foreign_ip
 
@@ -152,12 +148,12 @@ class DataProcessor:
                     # inbound
                     source_node = node_b
                     target_node = node_a
-                    edge_id = key + target_node['data']['label']
+                    edge_id = key + target_node["data"]["label"]
                 else:
                     # outbound
                     source_node = node_a
                     target_node = node_b
-                    edge_id = source_node['data']['label'] + key
+                    edge_id = source_node["data"]["label"] + key
                 if edge_id not in edge_ids:
                     edge = make_edge(
                         id=edge_id,
@@ -183,9 +179,7 @@ class DataProcessor:
             listen_ports = container.get("listen_ports")
 
             if parent_name:
-                parent_node = make_node(
-                    id=f"s__{parent_name}", label=parent_name, classes="stacks"
-                )
+                parent_node = make_node(id=f"s__{parent_name}", label=parent_name, classes="stacks")
 
             child_node = make_node(
                 id=f"c__{name}",
@@ -217,11 +211,7 @@ class DataProcessor:
                             id=f"i__{foreign_ip}",
                             label=coalesce(
                                 foreign_device,
-                                (
-                                    anonymize_ip(foreign_ip)
-                                    if self.mask_ip_labels
-                                    else foreign_ip
-                                ),
+                                (anonymize_ip(foreign_ip) if self.mask_ip_labels else foreign_ip),
                             ),
                             classes=f"graph-node {node_class}",
                         )

@@ -20,9 +20,7 @@ import json
 import logging
 import sys
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
 class DashApp:
@@ -31,9 +29,7 @@ class DashApp:
         self.limit = 100
         self.dev_mode = dev_mode
         self.app = Dash(__name__)
-        self.data_processor = DataProcessor(
-            dev_mode=dev_mode, mask_ip_labels=mask_ip_labels
-        )
+        self.data_processor = DataProcessor(dev_mode=dev_mode, mask_ip_labels=mask_ip_labels)
         self.layout_serve_count = 0  # Kind of a hacky workaround to avoid loading data from mongo on start. Need to find a better solution
         self.app.layout = (
             self.serve_layout
@@ -77,9 +73,7 @@ class DashApp:
                 id = data.get("id")
                 id = id[3:]  # Remove prefix id
                 if id in self.parent_names:
-                    child_names = [
-                        c.get("name") for c in self.containers if c.get("stack") == id
-                    ]
+                    child_names = [c.get("name") for c in self.containers if c.get("stack") == id]
                     return json.dumps(
                         {
                             "Container Stack": id,
@@ -89,9 +83,7 @@ class DashApp:
                         indent=2,
                     )
                 else:
-                    container = next(
-                        (c for c in self.containers if c.get("name") == id), None
-                    )
+                    container = next((c for c in self.containers if c.get("name") == id), None)
                     return json.dumps(coalesce(container, data), indent=2)
             else:
                 return "Click on a node to see additional details"
