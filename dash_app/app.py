@@ -20,19 +20,19 @@ import json
 import logging
 import sys
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
 class DashApp:
-    def __init__(self, dev_mode=False, mask_ip_labels=True):
+    def __init__(self, dev_mode=False, mask_ip_labels=True, hide_procs_with_no_inbound=True):
         cyto.load_extra_layouts()  # This is needed to use advanced layouts like cola, spread, etc
         self.limit = 100
         self.dev_mode = dev_mode
         self.app = Dash(__name__)
         self.data_processor = DataProcessor(
-            dev_mode=dev_mode, mask_ip_labels=mask_ip_labels
+            dev_mode=dev_mode,
+            mask_ip_labels=mask_ip_labels,
+            hide_procs_with_no_inbound=hide_procs_with_no_inbound,
         )
         self.layout_serve_count = 0  # Kind of a hacky workaround to avoid loading data from mongo on start. Need to find a better solution
         self.app.layout = (
@@ -77,9 +77,7 @@ class DashApp:
                 id = data.get("id")
                 id = id[3:]  # Remove prefix id
                 if id in self.parent_names:
-                    child_names = [
-                        c.get("name") for c in self.containers if c.get("stack") == id
-                    ]
+                    child_names = [c.get("name") for c in self.containers if c.get("stack") == id]
                     return json.dumps(
                         {
                             "Container Stack": id,
@@ -89,9 +87,7 @@ class DashApp:
                         indent=2,
                     )
                 else:
-                    container = next(
-                        (c for c in self.containers if c.get("name") == id), None
-                    )
+                    container = next((c for c in self.containers if c.get("name") == id), None)
                     return json.dumps(coalesce(container, data), indent=2)
             else:
                 return "Click on a node to see additional details"
@@ -161,11 +157,16 @@ class DashApp:
 def main():
     dev_mode = False
     mask_ip_labels = False
+    hide_procs_with_no_inbound = False
 
     if len(sys.argv) > 1 and sys.argv[1] == "dev":
         dev_mode = True
 
-    dash_app = DashApp(dev_mode=dev_mode, mask_ip_labels=mask_ip_labels)
+    dash_app = DashApp(
+        dev_mode=dev_mode,
+        mask_ip_labels=mask_ip_labels,
+        hide_procs_with_no_inbound=hide_procs_with_no_inbound,
+    )
     dash_app.run()
 
 

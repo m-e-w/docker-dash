@@ -18,16 +18,19 @@ from utils import make_node, make_edge, coalesce, anonymize_ip
 
 
 class DataProcessor:
-    def __init__(self, dev_mode=False, mask_ip_labels=True):
+    def __init__(self, dev_mode=False, mask_ip_labels=True ,hide_procs_with_no_inbound=True):
         conn_str = (
-            "mongodb://localhost:27017/"
-            if dev_mode
-            else "mongodb://docker_dash_mongo:27017/"
+            "mongodb://localhost:27017/" if dev_mode else "mongodb://docker_dash_mongo:27017/"
         )
         self.client = MongoClient(conn_str)
         self.db = self.client["dashdb"]
         self.collection = self.db["snapshots"]
         self.mask_ip_labels = mask_ip_labels
+        self.hide_procs_with_no_inbound = hide_procs_with_no_inbound
+
+    def is_gateway(self, name):
+        """Check to see if a foreign_device name is a gateway"""
+        return True if name and name.endswith(" (Gateway)") else False
 
     def load_container_data_json(self):
         """Load and return the container data from JSON."""
@@ -59,9 +62,7 @@ class DataProcessor:
                 else:
                     processes[k]["connections"].extend(v.get("connections", []))
 
-            logging.info(
-                f"Mongo Document ID: {doc['_id']}, Snapshot Time: {doc['snapshot_time']}"
-            )
+            logging.info(f"Mongo Document ID: {doc['_id']}, Snapshot Time: {doc['snapshot_time']}")
             devices = doc["host"]["devices"]
             for dev in devices:
                 # id = dev['id'] # Use container ID as our identifier (old)
@@ -95,47 +96,90 @@ class DataProcessor:
 
         # Process Processes
         for k, v in processes.items():
+
+            # Node A will always be a process
             node_a = make_node(id=f"p__{k}", label=k, classes="graph-node process")
 
-            for c in v.get("connections", []):
+            connections = v.get("connections", [])
+            listen_ports = v.get("listen_ports", [])
+
+            # Only add this process if it has at least one inbound connection
+            if self.hide_procs_with_no_inbound:
+                has_inbound = any(c.get("local_port") in listen_ports for c in connections)
+                if not has_inbound:
+                    continue  # skip this process entirely
+
+            for c in connections:
                 foreign_device = c.get("foreign_device", None)
                 foreign_ip = c.get("foreign_ip")
                 local_ip = c.get("local_ip")
 
-                key = None
-                if foreign_device and int(local_ip[-1]) == 1:
-                    key = local_ip
-                elif foreign_device and int(foreign_ip[-1]) == 1:
+                # Node B may reflect a docker container, gateway ip, or foreignip
+                id = ""
+                classes_string = "graph-node "
+                label = ""
+
+                # If we have a value for foreign_device it is either a container or docker gateway
+                if foreign_device:
+                    label = foreign_device
+                    key = None
+
+                    # We do a check to see which IP is the one that actually corresponds with the gateway
+                    if int(local_ip[-1]) == 1:
+                        key = local_ip
+                    elif int(foreign_ip[-1]) == 1:
+                        key = foreign_ip
+
+                    # Check if it the device is a gateway or not
+                    if self.is_gateway(foreign_device):
+                        classes_string += "docker-gateway-ip"
+                        id = f"i__{key}"
+                    # If its not a gateway then it must be a container since we have any value at all for foreign_device
+                    else:
+                        classes_string += "docker-container"
+                        id = f"c__{foreign_device}"
+                        key = foreign_device
+                # If we are here it means process is talking to a foreign ip and not a docker gateway ip or container
+                # For now just take foreign ip but we could ingest local ip as well possibly
+                else:
+                    id = f"i__{foreign_ip}"
+                    classes_string += "foreign-ip" if foreign_ip != "127.0.0.1" else "docker-gateway-ip"
+                    label = foreign_ip
                     key = foreign_ip
 
-                if not key:
-                    continue
-
                 node_b = make_node(
-                    id=f"i__{key}",
-                    label=foreign_device,
-                    classes="graph-node docker-gateway-ip",
+                    id=id,
+                    label=label,
+                    classes=classes_string,
                 )
 
-                if c.get("local_port") in v.get("listen_ports", []):
+                # Determine edge direction
+                if c.get("local_port") in listen_ports:
+                    # inbound
+                    source_node = node_b
+                    target_node = node_a
+                    edge_id = key + target_node["data"]["label"]
+                else:
+                    # outbound
+                    source_node = node_a
+                    target_node = node_b
+                    edge_id = source_node["data"]["label"] + key
+                if edge_id not in edge_ids:
                     edge = make_edge(
-                        id=key + k,
-                        source=f"{node_b['data']['id']}",
-                        target=f"{node_a['data']['id']}",
+                        id=edge_id,
+                        source=source_node["data"]["id"],
+                        target=target_node["data"]["id"],
                     )
 
-                    if edge["data"]["id"] not in edge_ids:
+                # Add nodes if they haven't been added yet
+                for node_key, node in [(k, node_a), (key, node_b)]:
+                    if node_key not in child_names:
+                        child_nodes.append(node)
+                        child_names.append(node_key)
 
-                        # Only bother adding any nodes that have an edge
-                        if key not in child_names:
-                            child_nodes.append(node_a)
-                            child_names.append(key)
-                        if k not in child_names:
-                            child_nodes.append(node_b)
-                            child_names.append(key)
-
-                        edges.append(edge)
-                        edge_ids.append(edge["data"]["id"])
+                # Append edge
+                edges.append(edge)
+                edge_ids.append(edge_id)
 
         # Process Containers
         for container in containers:
@@ -145,9 +189,7 @@ class DataProcessor:
             listen_ports = container.get("listen_ports")
 
             if parent_name:
-                parent_node = make_node(
-                    id=f"s__{parent_name}", label=parent_name, classes="stacks"
-                )
+                parent_node = make_node(id=f"s__{parent_name}", label=parent_name, classes="stacks")
 
             child_node = make_node(
                 id=f"c__{name}",
@@ -168,11 +210,7 @@ class DataProcessor:
                 local_port = int(connection.get("local_port"))
                 edge = None
 
-                is_gateway = (
-                    True
-                    if foreign_device and foreign_device.endswith(" (Gateway)")
-                    else False
-                )
+                is_gateway = self.is_gateway(foreign_device)
                 node_class = "docker-gateway-ip" if is_gateway else "foreign-ip"
                 # Container to ip connection processing
                 if not foreign_device or is_gateway:
@@ -183,11 +221,7 @@ class DataProcessor:
                             id=f"i__{foreign_ip}",
                             label=coalesce(
                                 foreign_device,
-                                (
-                                    anonymize_ip(foreign_ip)
-                                    if self.mask_ip_labels
-                                    else foreign_ip
-                                ),
+                                (anonymize_ip(foreign_ip) if self.mask_ip_labels else foreign_ip),
                             ),
                             classes=f"graph-node {node_class}",
                         )

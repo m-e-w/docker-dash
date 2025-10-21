@@ -82,8 +82,7 @@ def get_processes():
                 process_set[name]["connections"].append(connection)
 
             if (
-                local_port not in process_set[name]["listen_ports"]
-                and local_port < 32768
+                local_port not in process_set[name]["listen_ports"] and local_port < 32768
             ):  # if its listening in the high ephemeral port range it probably is TCP response traffic
                 process_set[name]["listen_ports"].append(local_port)
 
@@ -138,11 +137,7 @@ def get_containers():
         id = container.short_id
         image = container.attrs.get("Config").get("Image")
         pid = container.attrs.get("State").get("Pid")
-        stack = (
-            container.attrs.get("Config")
-            .get("Labels")
-            .get("com.docker.compose.project")
-        )
+        stack = container.attrs.get("Config").get("Labels").get("com.docker.compose.project")
         ip_addresses = []
         connections = []
         listen_ports = []
@@ -184,15 +179,11 @@ def get_containers():
                 pid_program_name = split_line[6] if split_line_length >= 7 else None
 
                 local_address_split = local_address.split(":")
-                local_ip = (
-                    "::" if local_address[0:2] == "::" else local_address_split[0]
-                )
+                local_ip = "::" if local_address[0:2] == "::" else local_address_split[0]
                 local_port = local_address_split[len(local_address_split) - 1]
 
                 foreign_address_split = foreign_address.split(":")
-                foreign_ip = (
-                    "::" if foreign_address[0:2] == "::" else foreign_address_split[0]
-                )
+                foreign_ip = "::" if foreign_address[0:2] == "::" else foreign_address_split[0]
                 foreign_port = foreign_address_split[len(foreign_address_split) - 1]
 
                 if pid_program_name is None and state not in NETSTAT_STATES:
@@ -241,11 +232,7 @@ def get_containers():
         for connection in connections:
             foreign_ip = connection.get("foreign_ip")
             foreign_device = None
-            if (
-                foreign_ip != "::"
-                and foreign_ip != "0.0.0.0"
-                and foreign_ip != "127.0.0.1"
-            ):
+            if foreign_ip != "::" and foreign_ip != "0.0.0.0" and foreign_ip != "127.0.0.1":
                 if foreign_ip in network_name_set:
                     foreign_device = network_name_set.get(foreign_ip)
                 else:
